@@ -82,38 +82,21 @@ void carBackward(){
 
 void balanceCar()
 {
-  // Serial.println("kkk");
   sei();
-  // Serial.print("encoder_count_left_a is ");
-  // Serial.println(encoder_count_left_a);
-  // Serial.print("encoder_count_right_a is ");
-  // Serial.println(encoder_count_right_a);
   encoder_left_pulse_num_speed += pwm_left < 0 ? -encoder_count_left_a : encoder_count_left_a;
   encoder_right_pulse_num_speed += pwm_right < 0 ? -encoder_count_right_a : encoder_count_right_a;
-  // Serial.print("encoder_count_left_a is ");
-  // Serial.println(encoder_count_left_a);
-  // Serial.print("encoder_count_right_a is ");
-  // Serial.println(encoder_count_right_a);
   encoder_count_left_a = 0;
   encoder_count_right_a = 0;
   mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
   kalmanfilter.Angle(ax, ay, az, gx, gy, gz, dt, Q_angle, Q_gyro, R_angle, C_0, K1);
   kalmanfilter_angle = kalmanfilter.angle;
-  // Serial.print("kalmanfilter_angle is ");
-  // Serial.println(kalmanfilter_angle);
-  // Serial.print("kalmanfilter.Gyro_x - angular_velocity_zero is ");
-  // Serial.println(kalmanfilter.Gyro_x - angular_velocity_zero);
   balance_control_output = kp_balance * (kalmanfilter_angle - angle_zero) + kd_balance * (kalmanfilter.Gyro_x - angular_velocity_zero);
-  // Serial.print("balance_control_output is ");
-  // Serial.println(balance_control_output);
 
   speed_control_period_count++;
   if (speed_control_period_count >= 8)
   {
     speed_control_period_count = 0;
     double car_speed = (encoder_left_pulse_num_speed + encoder_right_pulse_num_speed) * 0.5;
-    // Serial.print("car_speed is ");
-    // Serial.println(car_speed);
     encoder_left_pulse_num_speed = 0;
     encoder_right_pulse_num_speed = 0;
     speed_filter = speed_filter_old * 0.7 + car_speed * 0.3;
@@ -133,24 +116,16 @@ void balanceCar()
   pwm_left = balance_control_output - speed_control_output - rotation_control_output;
   pwm_right = balance_control_output - speed_control_output + rotation_control_output;
 
-  // Serial.print("original pwm_left is ");
-  // Serial.println(pwm_left);
   pwm_left = constrain(pwm_left, -255, 255);
   pwm_right = constrain(pwm_right, -255, 255);
 
-  // Serial.print("kalman filter is ");
-  // Serial.println(kalmanfilter_angle);
   if (motion_mode != START && motion_mode != STOP && (kalmanfilter_angle < balance_angle_min || balance_angle_max < kalmanfilter_angle))
   {
-    // Serial.println("STOPPPP!");
     motion_mode = STOP;
     carStop();
   }
-  // Serial.print("motion mode in balance is ");
-  // Serial.println(motion_mode);
   if (motion_mode == STOP)
   {
-    // Serial.println("STOP is called");
     car_speed_integeral = 0;
     setting_car_speed = 0;
     pwm_left = 0;
@@ -166,10 +141,6 @@ void balanceCar()
   }
   else
   {
-    // Serial.print("              pwm_left is ");
-    // Serial.println(pwm_left);
-    // Serial.print("                          pwm_right is ");
-    // Serial.println(pwm_right);
     if (pwm_left < 0)
     {
       digitalWrite(AIN1, 1);
