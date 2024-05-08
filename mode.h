@@ -17,4 +17,5 @@ enum MOTION_MODE
   TURNRIGHT,
   STOP,
   START,
+  CLEAR,
 } motion_mode = START;

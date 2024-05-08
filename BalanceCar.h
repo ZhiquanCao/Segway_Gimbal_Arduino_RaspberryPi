@@ -106,13 +106,15 @@ void balanceCar()
     car_speed_integeral += -setting_car_speed;
     car_speed_integeral = constrain(car_speed_integeral, -3000, 3000);
     speed_control_output = -kp_speed * speed_filter - ki_speed * car_speed_integeral;
-    if (millis() - move_prev_time > 1000){
-      // car_speed_integeral = 0;
+
+    if (millis() - move_prev_time > 3000){
       setting_car_speed = 0;
-    } 
+      motion_mode = CLEAR; // clear the modes but do nothing for the car speed or turn speed
+    }
     rotation_control_output = setting_turn_speed + kd_turn * kalmanfilter.Gyro_z;
     if (millis() - turn_prev_time > 1000){
       setting_turn_speed = 0;
+      motion_mode = CLEAR;
     }
   }
 

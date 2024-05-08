@@ -95,9 +95,10 @@ void setMotionState()
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
   start_prev_time = millis();
   trig_prev_time = millis();
+  move_prev_time = millis();
   delay(1000);
   carInitialize();
 }
