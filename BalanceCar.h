@@ -116,10 +116,10 @@ void balanceCar()
   // Serial.println(encoder_count_right_a);
   encoder_left_pulse_num_speed += pwm_left < 0 ? -encoder_count_left_a : encoder_count_left_a;
   encoder_right_pulse_num_speed += pwm_right < 0 ? -encoder_count_right_a : encoder_count_right_a;
-  Serial.print("encoder_count_left_a is ");
-  Serial.println(encoder_count_left_a);
-  Serial.print("encoder_count_right_a is ");
-  Serial.println(encoder_count_right_a);
+  // Serial.print("encoder_count_left_a is ");
+  // Serial.println(encoder_count_left_a);
+  // Serial.print("encoder_count_right_a is ");
+  // Serial.println(encoder_count_right_a);
   encoder_count_left_a = 0;
   encoder_count_right_a = 0;
   mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
