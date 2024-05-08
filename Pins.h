@@ -3,7 +3,7 @@
 
 // #define VOL_MEASURE_PIN A2
 // #define ECHO_PIN A3
-// #define TRIG_PIN 11
+#define TRIG_PIN 11
 // #define RECV_PIN 9
 // #define NUMPIXELS 4
 // #define RGB_PIN 3

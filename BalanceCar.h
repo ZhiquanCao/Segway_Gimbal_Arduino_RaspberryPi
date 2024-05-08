@@ -13,18 +13,7 @@
 #define ENCODER_RIGHT_A_PIN 19
 #define ENCODER_LEFT_A_PIN 18
 
-// int AIN1 = 3;
-// int AIN2 = 4;
-// int PWMA_LEFT = 5;
 
-// int BIN1 = 8;
-// int BIN2 = 9;
-// int PWMB_RIGHT = 10;
-
-MPU6050 mpu;
-KalmanFilter kalmanfilter;
-
-double balance_control_output = 0;
 
 //Setting PID parameters
 
@@ -36,11 +25,16 @@ double kp_turn = 2.5, kd_turn = 0.5;
 double angle_zero = 0;            //x axle angle calibration
 double angular_velocity_zero = 0; //x axle angular velocity calibration
 
+MPU6050 mpu;
+KalmanFilter kalmanfilter;
+
 volatile unsigned long encoder_count_right_a = 0;
 volatile unsigned long encoder_count_left_a = 0;
 int16_t ax, ay, az, gx, gy, gz;
 float dt = 0.005, Q_angle = 0.001, Q_gyro = 0.005, R_angle = 0.5, C_0 = 1, K1 = 0.05;
 
+unsigned long turn_prev_time = 0;
+double balance_control_output = 0;
 int encoder_left_pulse_num_speed = 0;
 int encoder_right_pulse_num_speed = 0;
 double speed_control_output = 0;
@@ -54,41 +48,21 @@ int setting_turn_speed = 0;
 double pwm_left = 0;
 double pwm_right = 0;
 float kalmanfilter_angle;
-// char balance_angle_min = -27;
-// char balance_angle_max = 27;
 char balance_angle_min = -12;
 char balance_angle_max = 12;
 
 void carStop()
 {
   digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, LOW);
   digitalWrite(BIN1, LOW);
+  digitalWrite(BIN2, HIGH);
   // digitalWrite(STBY_PIN, HIGH);
   analogWrite(PWMA_LEFT, 0);
   analogWrite(PWMB_RIGHT, 0);
 }
 
-void carForward(unsigned char speed)
-{
-  digitalWrite(AIN1, 0);
-  digitalWrite(AIN2, 1);
-  digitalWrite(BIN1, 0);
-  digitalWrite(BIN2, 1);
-  analogWrite(PWMA_LEFT, speed);
-  analogWrite(PWMB_RIGHT, speed);
-}
-
-void carBack(unsigned char speed)
-{
-  digitalWrite(AIN1, 1);
-  digitalWrite(AIN2, 0);
-  digitalWrite(BIN1, 1);
-  digitalWrite(BIN2, 0);
-  analogWrite(PWMA_LEFT, speed);
-  analogWrite(PWMB_RIGHT, speed);
-}
-
-void forward(){
+void carForward(){
   digitalWrite(BIN1, 0);
   digitalWrite(BIN2, 1);
   digitalWrite(AIN1, 1);
@@ -97,7 +71,7 @@ void forward(){
   analogWrite(PWMA_LEFT, -pwm_left);
 }
 
-void backward(){
+void carBackward(){
   digitalWrite(BIN1, 1);
   digitalWrite(BIN2, 0);
   digitalWrite(AIN1, 0);
@@ -138,8 +112,8 @@ void balanceCar()
   {
     speed_control_period_count = 0;
     double car_speed = (encoder_left_pulse_num_speed + encoder_right_pulse_num_speed) * 0.5;
-    Serial.print("car_speed is ");
-    Serial.println(car_speed);
+    // Serial.print("car_speed is ");
+    // Serial.println(car_speed);
     encoder_left_pulse_num_speed = 0;
     encoder_right_pulse_num_speed = 0;
     speed_filter = speed_filter_old * 0.7 + car_speed * 0.3;
@@ -148,10 +122,12 @@ void balanceCar()
     car_speed_integeral += -setting_car_speed;
     car_speed_integeral = constrain(car_speed_integeral, -3000, 3000);
     speed_control_output = -kp_speed * speed_filter - ki_speed * car_speed_integeral;
-    // Serial.print("speed_control_output is ");
-    // Serial.println(speed_control_output);
 
-    // rotation_control_output = setting_turn_speed + kd_turn * kalmanfilter.Gyro_z;
+    if (millis() - turn_prev_time < 1000){
+      rotation_control_output = setting_turn_speed + kd_turn * kalmanfilter.Gyro_z;
+    } else {
+      rotation_control_output = 0;
+    }
   }
 
   pwm_left = balance_control_output - speed_control_output - rotation_control_output;
@@ -166,13 +142,15 @@ void balanceCar()
   // Serial.println(kalmanfilter_angle);
   if (motion_mode != START && motion_mode != STOP && (kalmanfilter_angle < balance_angle_min || balance_angle_max < kalmanfilter_angle))
   {
-    Serial.println("STOPPPP!");
+    // Serial.println("STOPPPP!");
     motion_mode = STOP;
     carStop();
   }
-
+  // Serial.print("motion mode in balance is ");
+  // Serial.println(motion_mode);
   if (motion_mode == STOP)
   {
+    // Serial.println("STOP is called");
     car_speed_integeral = 0;
     setting_car_speed = 0;
     pwm_left = 0;
@@ -194,30 +172,30 @@ void balanceCar()
     // Serial.println(pwm_right);
     if (pwm_left < 0)
     {
-      // digitalWrite(AIN1, 1);
-      // digitalWrite(AIN2, 0);
-      // analogWrite(PWMA_LEFT, -pwm_left);
-      forward();
+      digitalWrite(AIN1, 1);
+      digitalWrite(AIN2, 0);
+      analogWrite(PWMA_LEFT, -pwm_left);
+      // forward();
     }
     else
     {
-      // digitalWrite(AIN1, 0);
-      // digitalWrite(AIN2, 1);
-      // analogWrite(PWMA_LEFT, pwm_left);
-      backward();
+      digitalWrite(AIN1, 0);
+      digitalWrite(AIN2, 1);
+      analogWrite(PWMA_LEFT, pwm_left);
+      // backward();
     }
-    // if (pwm_right < 0)
-    // {
-    //   digitalWrite(BIN1, 0);
-    //   digitalWrite(BIN2, 1);
-    //   analogWrite(PWMB_RIGHT, -pwm_right);
-    // }
-    // else
-    // {
-    //   digitalWrite(BIN1, 1);
-    //   digitalWrite(BIN2, 0);
-    //   analogWrite(PWMB_RIGHT, pwm_right);
-    // }
+    if (pwm_right < 0)
+    {
+      digitalWrite(BIN1, 0);
+      digitalWrite(BIN2, 1);
+      analogWrite(PWMB_RIGHT, -pwm_right);
+    }
+    else
+    {
+      digitalWrite(BIN1, 1);
+      digitalWrite(BIN2, 0);
+      analogWrite(PWMB_RIGHT, pwm_right);
+    }
   }
 }
 
