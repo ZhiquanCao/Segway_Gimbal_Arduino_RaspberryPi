@@ -18,10 +18,12 @@ void keyEventHandle()
       key_value = "\0";
       break;
     case 'f':
+      move_prev_time = millis();
       motion_mode = FORWARD;
       key_value = "\0";
       break;
     case 'b':
+      move_prev_time = millis();
       motion_mode = BACKWARD;
       key_value = "\0";
       break;
@@ -103,8 +105,8 @@ void setup()
 void loop(){
   if (Serial.available() > 0) {  // Check if data is available to read
     key_value = Serial.read();  // Read the incoming byte
-    // Serial.print("I received: ");
-    // Serial.println(inputData);
+    Serial.print("I received: ");
+    Serial.println(key_value);
   }
   keyEventHandle();
   setMotionState();

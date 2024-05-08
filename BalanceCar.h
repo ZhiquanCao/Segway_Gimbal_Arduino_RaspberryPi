@@ -34,6 +34,7 @@ int16_t ax, ay, az, gx, gy, gz;
 float dt = 0.005, Q_angle = 0.001, Q_gyro = 0.005, R_angle = 0.5, C_0 = 1, K1 = 0.05;
 
 unsigned long turn_prev_time = 0;
+unsigned long move_prev_time = 0;
 double balance_control_output = 0;
 int encoder_left_pulse_num_speed = 0;
 int encoder_right_pulse_num_speed = 0;
@@ -105,11 +106,13 @@ void balanceCar()
     car_speed_integeral += -setting_car_speed;
     car_speed_integeral = constrain(car_speed_integeral, -3000, 3000);
     speed_control_output = -kp_speed * speed_filter - ki_speed * car_speed_integeral;
-
-    if (millis() - turn_prev_time < 1000){
-      rotation_control_output = setting_turn_speed + kd_turn * kalmanfilter.Gyro_z;
-    } else {
-      rotation_control_output = 0;
+    if (millis() - move_prev_time > 1000){
+      // car_speed_integeral = 0;
+      setting_car_speed = 0;
+    } 
+    rotation_control_output = setting_turn_speed + kd_turn * kalmanfilter.Gyro_z;
+    if (millis() - turn_prev_time > 1000){
+      setting_turn_speed = 0;
     }
   }
 
