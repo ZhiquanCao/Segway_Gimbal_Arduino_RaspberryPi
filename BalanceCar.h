@@ -1,10 +1,3 @@
-/*
- * @Description: In User Settings Edit
- * @Author: your name
- * @Date: 2019-10-08 09:35:07
- * @LastEditTime: 2019-10-11 16:25:04
- * @LastEditors: Please set LastEditors
- */
 #include <MsTimer2.h>
 #include <Wire.h>
 #include <MPU6050.h>
@@ -195,10 +188,11 @@ void carInitialize()
   pinMode(BIN2, OUTPUT);
   pinMode(PWMB_RIGHT, OUTPUT);
 
-  Wire.begin();
-  mpu.initialize();
   attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_A_PIN), encoderCountLeftA, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_A_PIN), encoderCountRightA, CHANGE);
+
+  Wire.begin();
+  mpu.initialize();
   MsTimer2::set(5, balanceCar);
   MsTimer2::start();
 }

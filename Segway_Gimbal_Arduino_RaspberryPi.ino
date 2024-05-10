@@ -104,8 +104,9 @@ void setup()
 }
 
 void loop(){
-  if (Serial.available() > 0) {  // Check if data is available to read
-    key_value = Serial.read();  // Read the incoming byte
+  if (Serial.available() > 0) {
+    String input_str = Serial.readStringUntil('\n');
+    key_value = input_str[0];
     Serial.print("I received: ");
     Serial.println(key_value);
   }
@@ -114,7 +115,6 @@ void loop(){
   if (millis() - trig_prev_time > 500) {
     trig_prev_time = millis();
     if (!digitalRead(TRIG_PIN)){
-      
       stop_flag = !stop_flag;
       motion_mode = stop_flag? STOP : START;
     }
